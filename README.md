@@ -1,4 +1,4 @@
-#Application
+# Application
 It is a very simple spring boot application created for demonstration of basic kubernetes features.
 It also shows basic principles of creating spring boot applications which are deployed on a kubernetes cluster.
 
@@ -25,13 +25,13 @@ So when the variable `SPREAD`is set to 0.003 it will result the rate for EUR/USD
 
 The application uses spring boot actuator /health endpoint to provide health checks. 
 
-######Usage: 
+###### Usage: 
 `http:<host>:<port>/rate?source=A&destination=B` gets rate for currency A/B, e.g. get the rate of currency pair 
 EUR/USD by executing `http://localhost:8080/rate?source=EUR&destination=USD`
-######Build:
+###### Build:
 Command `mvn clean package` creates jar file `target/k8s-demo-currency-provider-0.0.1-SNAPSHOT.jar`.
 Command `docker build -t k8s-demo-currency-provider:0.0.1 .`  builds docker image `k8s-demo-currency-provider` and tag it with version `0.0.1`.
-######Deployment:
+###### Deployment:
 ```
 kubectl create -f k8s/k8s-demo-currency.configmap.yaml
 kubectl create -f k8s/k8s-demo-currency-provider.deployment.yaml
@@ -43,8 +43,8 @@ export DEMO_IP=$(kubectl get nodes -o jsonpath="{.items[0].status.addresses[0].a
 export DEMO_PORT=$(kubectl get services k8s-demo-currency-provider -o jsonpath="{.spec.ports[0].nodePort}")
 echo "$DEMO_IP:$DEMO_PORT"
 ```
-#Demonstration scenario
-##Prerequirements
+# Demonstration scenario
+## Prerequirements
 1. Before you begin ensure that you have installed on your PC:
   * Java SDK 1.8
   * maven
@@ -66,7 +66,7 @@ docker build -t k8s-demo-currency-provider:0.0.1 .
 You don't have to push docker image to a registry thanks to using `eval $(minikube docker-env)` 
 and imagePullPolicy set to IfNotPresent in all examples below.
 
-######Notice 
+###### Notice 
 If the demonstration is on a real kubernetes cluster connected to private registry you should modify command above and run
 ```
 docker build -t registry.example.com/k8s-demo-currency-provider:0.0.1 .
@@ -74,7 +74,7 @@ docker build -t registry.example.com/k8s-demo-currency-provider:0.0.1 .
 change `registry.example.com` to your registry address. You should also modify kubernetes yaml descriptors in 
 k8s directory adding registry prefix in image property of deployments. Also every command operating on image below should be customized. You should also execute `docker push registry.example.com/k8s-demo-currency-provider:0.0.1` after `docker build -t registry.example.com/k8s-demo-currency-provider:0.0.1 .` command (for application version 0.0.1 as well as 0.0.2 changing registry.example.com/k8s-demo-currency-provider:0.0.1 to registry.example.com/k8s-demo-currency-provider:0.0.2).
 
-##Deployment of sample spring boot application
+## Deployment of sample spring boot application
 This is demonstration of most basic kubernetes features. Deploy the application on your kubernetes. 
 Tell kubernetes to do this by creating ConfigMap with application configuration and deployment:
 ```
@@ -96,7 +96,7 @@ You can do it by deleting pods - kubernetes will create new instances with fresh
 In the real world to avoid manual restarts you can use tools like helm with charts or consider using immutable ConfigMaps.
 You can not access the application http endpoint. You must create a kubernetes service what is subject of next section.
 
-##Expose deployment on kubernetes service
+## Expose deployment on kubernetes service
 When the pods where created, they are not accessible from outside of the cluster. 
 They are not even accessible for other pods in the same namespace of kubernetes.
 You have to create a service to expose pods ports. It will also provide load balancing of network traffic to our application. 
@@ -120,8 +120,8 @@ curl "$DEMO_IP:$DEMO_PORT/rate?source=EUR&destination=USD"
 ```
 You can replay test of changing configuration from previous scenario and check application response after changed configuration and then pod restarted. 
 
-##Scale the application
-####Availlability and response test
+## Scale the application
+#### Availlability and response test
 Test described below will be used also in further sections for demonstration various features of kubernetes.
 In the new terminal execute below script. 
 ```
@@ -132,13 +132,13 @@ while true; do sleep 1; curl --max-time 1 "$DEMO_IP:$DEMO_PORT/rate?source=EUR&d
 It will call our service and prints ones a second result in the terminal. 
 Script checks whether application is available by printing content of the rate service.
 The curl command waits only 1 second for an answer. If it will not receive an answer after 1 second it prints an error message.
-####Scale
+#### Scale
 Run `kubectl scale deployment k8s-demo-currency-provider --replicas 2`.
 Look at dashboard or run `kubectl get pods`. Kubernetes creates second pod containing our application in container grabbed from image `k8s-demo-currency-provider:0.0.1`.
 Check deployment status by `kubectl get deployment` and `kubectl rollout status deployment/k8s-demo-currency-provider`.
 Check what happened in the second terminal - application could print error messages. We will explain it later.
 
-##Self-healing
+## Self-healing
 Run the __availability and response test__ described in __scale the application__ above.
 Delete the k8s-demo-currency-provider pod on dashboard or by kubectl.
 (Run `kubectl get pods` and then `kubectl delete pod <pod name>` where `<podn ame>` you get from output of the first command).
@@ -147,7 +147,7 @@ Look at output of the second terminal - application could print error messages.
 Self-healing works, but kubernetes need to now when application finished initialization and whether is up and running. 
 Next demo improve this (and previous test as well).
 
-##readinessProbe & livenessProbe
+## readinessProbe & livenessProbe
 There are two mechanisms introduced in kubernetes with purpose of health check. 
 First one is readinessProbe which checks whether application initialization process has finished. 
 Only when readinessProbe of a pod succeeds kubernetes will start to serve network traffic to the pod. 
@@ -177,7 +177,7 @@ Notice that there are no errors in output.
 Self-healing mechanism working together with readinessProbe fixed errors that were seen in the previous tests.
 You can also run again test from __Scacle__ and ensure that there are no errors as well.
 
-##Zero downtime deployment
+## Zero downtime deployment
 We will prepare a new version of our application to demonstrate zero downtime deployment.
 Edit sources and change value of `eurUsdRate` attribute in class `CurrencyProviderRest`. 
 Set it to 2.0 or something that will differ from current value. 
@@ -195,7 +195,7 @@ It respects rules provided by readinessProbe, so our application is available wi
 Look at output on the new terminal. Application was printing in a loop value 1.0 and then after deployment changed value to 2.0. 
 There were no errors in the output. We deployed the new version of application without any downtime.
 
-##Configmaps and secrets 
+## Configmaps and secrets 
 Secrets are similar to ConfigMaps. Main difference is in encoding. 
 ConfigMaps are not encoded. Secret uses base64 for encoding and its purpose is to store classified data.
 We will demonstrate it by using equivalent secret in place of existing ConfigMap.
@@ -206,7 +206,7 @@ In the editor you should find `configMapKeyRef` text and change it to `secretKey
 Deployment will use value from secret in place of ConfigMap.
 Bring back configuration based on ConfigMap for further use.
 
-##Simple resources utilization show on dashboard
+## Simple resources utilization show on dashboard
 Change `wizardLoads` value in ConfigMap - set it value to 100000000 (expected ~10s latency per call).
 Pods will not use new configuration automatically. You have to manually restart pods by deleting it in dashboard or by kubectl.
 Execute the `/rate` endpoint with __rateWizzard __ (eg. PLN/USD instead of EUR/USD) in browser or using curl. 
@@ -220,7 +220,7 @@ Check CPU and memory loads in the dashboard.
 Wait a minute and run again the `/rate` with __rateWizzard __ endpoint. 
 Look at dashboard and CPU and memory diagrams.
 
-##Horizontal pod autoscaling - HPA
+## Horizontal pod autoscaling - HPA
 HPA needs resources to be configured in the deployment descriptor for running. 
 Edit k8s-demo-currency-provider deployment and add resources configuration.
 Run `kubectl edit deployment k8s-demo-currency-provider` and in the editor place below text in container section:
