@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-demo-currency
+data:
+  wizardLoops: "100000000"
+  spread: "0"

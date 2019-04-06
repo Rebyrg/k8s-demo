@@ -1,0 +1,43 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: k8s-demo-currency-provider
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: k8s-demo-currency-provider
+    spec:
+      containers:
+      - name: k8s-demo-currency-provider
+        image: k8s-demo-currency-provider:0.0.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        env:
+        - name: JAVA_OPTIONS
+          value: "-Xms128m -Xmx128m"
+        - name: WIZARD_LOOPS
+          valueFrom:
+            configMapKeyRef:
+              name: k8s-demo-currency
+              key: wizardLoops
+        - name: SPREAD
+          valueFrom:
+            configMapKeyRef:
+              name: k8s-demo-currency
+              key: spread
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 40
+          periodSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 1
