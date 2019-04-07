@@ -209,7 +209,7 @@ Bring back configuration based on ConfigMap for further use.
 ## Simple resources utilization show on dashboard
 Change `wizardLoads` value in ConfigMap - set it value to 100000000 (expected ~10s latency per call).
 Pods will not use new configuration automatically. You have to manually restart pods by deleting it in dashboard or by kubectl.
-Execute the `/rate` endpoint with __rateWizzard __ (eg. PLN/USD instead of EUR/USD) in browser or using curl. 
+Execute the `/rate` endpoint with __rateWizzard__ (eg. PLN/USD instead of EUR/USD) in browser or using curl. 
 Script below runs it in a loop 5 times.
 ```
 export DEMO_IP=$(kubectl get nodes -o jsonpath="{.items[0].status.addresses[0].address}")
@@ -217,7 +217,7 @@ export DEMO_PORT=$(kubectl get services k8s-demo-currency-provider -o jsonpath="
 for ((i=1;i<=5;i++)); do sleep $((5 + $i)); curl "$DEMO_IP:$DEMO_PORT/rate?source=PLN&destination=USD"; echo -e $(date); done
 ```
 Check CPU and memory loads in the dashboard.
-Wait a minute and run again the `/rate` with __rateWizzard __ endpoint. 
+Wait a minute and run again the `/rate` with __rateWizzard__ endpoint. 
 Look at dashboard and CPU and memory diagrams.
 
 ## Horizontal pod autoscaling - HPA
@@ -240,13 +240,13 @@ It enables HPA for our deployment with constraints for count of pods. Minimum is
 HPA uses CPU statistic provided by heapser. The parameter --cpu-percent tells HPA when it should scale the application horizontally.
 You can check status of HPA executing `kubectl get hpa` and `kubectl describe hpa`. 
 We need to cause high CPU load for demonstration of HPA. 
-We will use the rate service with __rateWizzard __ of our application.
+We will use the rate service with __rateWizzard__ of our application.
 Run a few times in a short delays the `/rate` endpoint with currencies different when EUR/USD eg. PLN/USD.
 ```
 curl "$DEMO_IP:$DEMO_PORT/rate?source=PLN&destination=USD"
 ```
 Now you can check how HPA works by executing command `kubectl describe hpa`.
-The __rateWizzard __  should increase the CPU load. 
+The __rateWizzard__  should increase the CPU load. 
 Notice that there is delay in gathering CPU statistics introduced by heapster and HPA itself. 
 So wait a minute until HPA gathers statistics and start works.
  
@@ -274,5 +274,5 @@ Here is part of output of command `kubectl describe hpa` that contains logs of 1
 ```
 As you can see HPA created 3-rd pod when it noticed that CPU load was to high. 
 After a few minutes, when CPU load decreased, HPA scaled it down to minimum count of 2 pods.
-If during your test HPA did not created a new pod probably you should increase CPU loads by running additional `/rate` with __rateWizzard __  endpoint.
+If during your test HPA did not created a new pod probably you should increase CPU loads by running additional `/rate` with __rateWizzard__  endpoint.
 You can also check ConfigMap and set __wizardLoops__ to a higher value.
