@@ -83,17 +83,17 @@ kubectl create -f k8s/k8s-demo-currency-provider.deployment.yaml
 ``` 
 Kubernetes allocates all necessary resources for the application and then creates a pod with the application as described 
 in deployment and uses configuration provided in the ConfigMap.
-You can see what happens on the kubernetes dahboard in a browser by executing `minikube dashboard` or in terminal `kubectl get pods`. 
+You can see what happens on the kubernetes dashboard in a browser by executing `minikube dashboard` or in terminal `kubectl get pods`. 
 You should find newly created, running pod. You can check its logs in the dashboard or by executing `kubectl logs <pod aname>`
-You can also see CPU and memory loads of pod on the dashboard.
-Application configuration is stored in ConfigMap k8s-demo-currency. You can check its content in dashboard or by executing `kubectl get configmap -o yaml`.
+You can also see CPU and memory loads of a pod on the dashboard.
+Application configuration is stored in ConfigMap k8s-demo-currency. You can check its content in the dashboard or by executing `kubectl get configmap -o yaml`.
 Execute `kubectl exec <pod name> env` and find the SPREAD environment variable.
 Change `spread` value in the k8s-demo-currency ConfigMap in the dahsboard.
 Again execute `kubectl exec <pod name> env` and find the SPREAD environment variable.
 Notice that when you change values in a ConfigMap, the deployment using them will not be notified automatically. 
-You have to manually force restart of pods managed by deployment. 
-You can do it by deleting pods - kubernetes will create new instances with fresh configuration loaded from changed ConfigMap.
-In the real world to avoid manual restarts you can use tools like helm with charts or consider using immutable ConfigMaps.
+You have to manually force restart of the pods managed by deployment. 
+You can do it by deleting pods - kubernetes will create new instances with fresh configuration loaded from changed ConfigMap. Run `kubectl delete <pod aname>` or go inside pod by executing `kubectl exec -it <pod aname> /bin/sh` and than from the shell of the container kill the java process.
+In the real world to avoid manual restarts you can use tools like helm with charts or consider using immutable ConfigMaps (do not modify ConfigMap when you need to change its value, create a new one and repleace usage of the old one to the newly created). 
 You can not access the application http endpoint. You must create a kubernetes service what is subject of next section.
 
 ## Expose deployment on kubernetes service
@@ -153,7 +153,7 @@ First one is readinessProbe which checks whether application initialization proc
 Only when readinessProbe of a pod succeeds kubernetes will start to serve network traffic to the pod. 
 Kubernetes uses livenessProbe in a pod to check if application is sill running. 
 To enable lifnessProbe and readynessProbe in deployment edit deployment. 
-Edit deployment descriptor - run `kubectl edit deployment k8s-demo-currency-provider` and then in editor put below text in container section
+Edit deployment descriptor - run `kubectl edit deployment k8s-demo-currency-provider` and then in an editor put below text in the container section
 ```
         livenessProbe:
           httpGet:
@@ -173,26 +173,26 @@ The file contains already set livenessProbe and readinessProbe values.
 
 Run the __availability and response test__ described in __scale the application__ above.
 Delete pod and check output of the __new terminal window__. 
-Notice that there are no errors in output. 
+Notice that there are no errors in the output. 
 Self-healing mechanism working together with readinessProbe fixed errors that were seen in the previous tests.
 You can also run again test from __Scacle__ and ensure that there are no errors as well.
 
 ## Zero downtime deployment
 We will prepare a new version of our application to demonstrate zero downtime deployment.
-Edit sources and change value of `eurUsdRate` attribute in class `CurrencyProviderRest`. 
+Edit sources and change value of `eurUsdRate` attribute in the class `CurrencyProviderRest`. 
 Set it to 2.0 or something that will differ from current value. 
 We will print the value with spread in a loop like in previous tests, so we need to notice when application version was changed. 
 Build new version of application executing `mvn clean package`. 
-It will create new file `target/k8s-demo-currency-provider-0.0.1-SNAPSHOT.jar` with modified the rate service.
+It will create new file `target/k8s-demo-currency-provider-0.0.1-SNAPSHOT.jar` with modified rate service.
 Then run `docker build -t k8s-demo-currency-provider:0.0.2 .`. It builds a new docker image `k8s-demo-currency-provider` and tag it with the new version `0.0.2`.
-You can check that that there is the new image with changed image id in your local docker registry running `docker images | grep k8s-demo`.
+You can check that there is a new image with a changed image id in your local docker registry running `docker images | grep k8s-demo`.
 Ensure that you have property __replicas__ set to at least 2 in deployment `k8s-demo-currency-provider`. 
 If not run `kubectl scale deployment k8s-demo-currency-provider --replicas 2`.
 Run the __availability and response test__ described in __scale the application__ above.
 Run `kubectl set image deployment/k8s-demo-currency-provider k8s-demo-currency-provider=k8s-demo-currency-provider:0.0.2` 
 Kubernetes starts rolling update of our application changing its image version from 0.0.1 to 0.0.2 one by one. 
 It respects rules provided by readinessProbe, so our application is available without any breaks. 
-Look at output on the new terminal. Application was printing in a loop value 1.0 and then after deployment changed value to 2.0. 
+Look at the output on the new terminal. Application was printing in a loop value 1.0 and then after deployment changed value to 2.0. 
 There were no errors in the output. We deployed the new version of application without any downtime.
 
 ## Configmaps and secrets 
@@ -200,7 +200,7 @@ Secrets are similar to ConfigMaps. Main difference is in encoding.
 ConfigMaps are not encoded. Secret uses base64 for encoding and its purpose is to store classified data.
 We will demonstrate it by using equivalent secret in place of existing ConfigMap.
 Run `kubectl create -f k8s-demo-currency-provider.secret.yaml`. It creates secret containing the same data as in existing ConfigMap.  
-You can find created secret in dashboard and compare it to existing ConfigMap.
+You can find created secret in the dashboard and compare it to the existing ConfigMap.
 Now modify deployment. Run `kubectl edit deployment k8s-demo-currency-provider`.
 In the editor you should find `configMapKeyRef` text and change it to `secretKeyRef`. 
 Deployment will use value from secret in place of ConfigMap.
@@ -208,8 +208,8 @@ Bring back configuration based on ConfigMap for further use.
 
 ## Simple resources utilization show on dashboard
 Change `wizardLoads` value in ConfigMap - set it value to 100000000 (expected ~10s latency per call).
-Pods will not use new configuration automatically. You have to manually restart pods by deleting it in dashboard or by kubectl.
-Execute the `/rate` endpoint with __rateWizzard__ (eg. PLN/USD instead of EUR/USD) in browser or using curl. 
+Pods will not use new configuration automatically. You have to manually restart pods by deleting it in the dashboard or by kubectl.
+Execute the `/rate` endpoint with __rateWizzard__ (eg. PLN/USD instead of EUR/USD) in the browser or using curl. 
 Script below runs it in a loop 5 times.
 ```
 export DEMO_IP=$(kubectl get nodes -o jsonpath="{.items[0].status.addresses[0].address}")
@@ -274,5 +274,5 @@ Here is part of output of command `kubectl describe hpa` that contains logs of 1
 ```
 As you can see HPA created 3-rd pod when it noticed that CPU load was to high. 
 After a few minutes, when CPU load decreased, HPA scaled it down to minimum count of 2 pods.
-If during your test HPA did not created a new pod probably you should increase CPU loads by running additional `/rate` with __rateWizzard__  endpoint.
+If during your test HPA did not created a new pod, probably you should increase CPU loads by running additional `/rate` with __rateWizzard__  endpoint.
 You can also check ConfigMap and set __wizardLoops__ to a higher value.
